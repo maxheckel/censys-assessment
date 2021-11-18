@@ -1,0 +1,36 @@
+version: '3'
+services:
+
+
+  db:
+    image: postgres:latest
+    ports:
+      - 54321:5432
+    volumes:
+      - ./pgdb:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: censys-local
+      POSTGRES_USER: censys
+      POSTGRES_PASSWORD: censys
+
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/go/src/censys
+    depends_on:
+      - db
+
+  import:
+    image: golang:latest
+    volumes:
+      - .:/go/src/censys
+    working_dir: /go/src/censys
+    command: |-
+      bash -c 'go run cmd/import/main.go'
+    depends_on:
+      - db
