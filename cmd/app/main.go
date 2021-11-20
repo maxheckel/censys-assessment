@@ -6,6 +6,13 @@ import (
 )
 
 func main() {
-	srv := server.NewServer(&config.Config{})
+	cfg, err := config.Load("censys")
+	if err != nil {
+		panic(err)
+	}
+	srv, err := server.NewServer(cfg)
+	if err != nil {
+		panic(err)
+	}
 	srv.Start()
 }

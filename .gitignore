@@ -2,3 +2,4 @@
 build
 .idea
 cmd/import/data
+dblocal

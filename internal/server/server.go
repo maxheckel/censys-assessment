@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/maxheckel/censys-assessment/internal/config"
 	"github.com/maxheckel/censys-assessment/internal/handlers"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"os"
@@ -16,13 +17,19 @@ import (
 type Server struct {
 	Router *mux.Router
 	Handlers *handlers.Handlers
+	Database *gorm.DB
 }
 
 
-func NewServer(cfg *config.Config) *Server{
+func NewServer(cfg *config.Config) (*Server, error){
 	s := &Server{}
 	s.Router = s.NewRouter()
-	return s
+	db, err := GetDB(cfg)
+	if err != nil {
+		return nil, err
+	}
+	s.Database = db
+	return s, nil
 }
 
 func (s *Server) Start() {

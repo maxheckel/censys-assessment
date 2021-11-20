@@ -1,24 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/maxheckel/censys-assessment/internal/config"
 	"github.com/maxheckel/censys-assessment/internal/domain"
+	"github.com/maxheckel/censys-assessment/internal/server"
 	"github.com/oschwald/maxminddb-golang"
-	"gorm.io/driver/postgres"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"time"
-
 	"log"
 	"path/filepath"
+	"time"
 )
 
 func main() {
+	iteratively := flag.Bool("iteratively", false, "whether to run the import iteratively or not")
+	flag.Parse()
 	cfg, err := config.Load("CENSYS")
 	if err != nil {
 		log.Fatal(err)
 	}
-	db, err := getDB(cfg)
+	db, err := server.GetDB(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,69 +31,75 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db.Exec(fmt.Sprintf(`COPY ips(network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider,postal_code,latitude,longitude,accuracy_radius)
-FROM '%s'
-DELIMITER ','
-CSV HEADER;`,  "/var/lib/postgresql/data/GeoLite2-City-Blocks-IPv4.csv"))
-	//importFile(db)
-
-}
-
-func getDB(config *config.Config) (*gorm.DB, error){
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort, config.DBSSLMode)
-	count := 0
-	var db *gorm.DB
-	var err error
-	// Very basic sleep / retry
-	for count < 5{
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-		if err == nil {
-			return db, err
+	start := time.Now()
+	if *iteratively {
+		err = iterativeInsert(db)
+	} else {
+		err = bulkInsert(db)
+		if err != nil {
+			err = errors.Wrap(err, "You might not have copied your GeoLite2-City-Blocks-IPv4.csv file into the dblocal folder or otherwise onto the server where the DB is hosted if not running locally!")
 		}
-		count++
-		time.Sleep(2 * time.Second)
 	}
-	return db, err
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	elapsed := time.Since(start)
+	log.Printf("Import took %s", elapsed)
 }
 
-func importFile(db *gorm.DB) {
+func bulkInsert(db *gorm.DB) error {
+	log.Println("Beginning import, this could take a while!")
+
+	return db.Exec(fmt.Sprintf(`COPY ips(network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider,postal_code,latitude,longitude,accuracy_radius)
+	FROM '%s'
+	DELIMITER ','
+	CSV HEADER;`, "/var/lib/postgresql/data/GeoLite2-City-Blocks-IPv4.csv")).Error
+
+}
+
+// Alternative way to insert the file line by line using the mmdb file type
+func iterativeInsert(db *gorm.DB) error{
 	fileName, err := filepath.Abs("./cmd/import/data/GeoLite2-City.mmdb")
 	fmt.Println(fileName)
 	file, err := maxminddb.Open(fileName)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	record := domain.MaxMindRow{}
 	if countsMatch(db, file) {
-		return
+		return nil
 	}
 	err = db.Exec("TRUNCATE TABLE ips").Error
 	if err != nil {
-		panic(err)
+		return err
 	}
 	networks := file.Networks(maxminddb.SkipAliasedNetworks)
 	count := 0
+	var rows []domain.IP
 	for networks.Next() {
 		subnet, err := networks.Network(&record)
 		subnet.IP.String()
 		if err != nil {
 			log.Fatal(err)
 		}
-		//row := domain.IP{
-		//	Latitude:  record.Location.Lat,
-		//	Longitude: record.Location.Lng,
-		//	Address:   subnet.IP.String(),
-		//}
-		//db.Create(&row)
-		fmt.Printf("%d: %s created\n", count, subnet.IP.String())
+		row := domain.IP{
+			Latitude:  fmt.Sprintf("%f", record.Location.Lat),
+			Longitude: fmt.Sprintf("%f", record.Location.Lng),
+			Network:   subnet.IP.String(),
+		}
+		rows = append(rows, row)
+		if len(rows) >= 1000 {
+			db.Create(&rows)
+			rows = []domain.IP{}
+			fmt.Printf("%d: created\n", count)
+		}
+
 		count++
 	}
-	if networks.Err() != nil {
-		log.Fatal(networks.Err())
-	}
+	return networks.Err()
 }
 
 func countsMatch(db *gorm.DB, file *maxminddb.Reader) bool {
