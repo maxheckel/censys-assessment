@@ -6,10 +6,8 @@ import (
 	"path/filepath"
 )
 
-// spaHandler implements the http.Handler interface, so we can use it
-// to respond to HTTP requests. The path to the static directory and
-// path to the index file within that static directory are used to
-// serve the SPA in the given static directory.
+// This was left in here just so we could self host everything, ultimately to show that I knew how to use
+// docker compose though I ended up using a separate dev server for local development
 type SPAHandler struct {
 	StaticPath string
 	IndexPath  string
