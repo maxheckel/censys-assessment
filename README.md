@@ -17,7 +17,7 @@ Simply run `docker-compose up` and it will take care of it.  After that you'll n
 The API's url is localhost:8080, the UI's url is localhost:4200
 
 #### Importing data
-Within the `cmd/import/data` folder you must a file downloaded from Max Mind DB.  It can be [downloaded here](https://dev.maxmind.com/geoip/geoip2/geolite2/).  The file should be named GeoLite2-City.mmdb and placed in the `cmd/import/data` folder.
+Within the `cmd/import/data` folder you must add a file downloaded from Max Mind DB.  It can be [downloaded here](https://dev.maxmind.com/geoip/geoip2/geolite2/).  The file should be named GeoLite2-City.mmdb and placed in the `cmd/import/data` folder.
 
 
 ### Thoughts and Notes
