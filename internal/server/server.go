@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/maxheckel/censys-assessment/internal/config"
 	"github.com/maxheckel/censys-assessment/internal/handlers"
+	"github.com/maxheckel/censys-assessment/internal/store"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -29,6 +30,13 @@ func NewServer(cfg *config.Config) (*Server, error){
 		return nil, err
 	}
 	s.Database = db
+	store := store.Store{
+		IPs: store.NewIPStore(db),
+	}
+	handlers := &handlers.Handlers{
+		Store: store,
+	}
+	s.Handlers = handlers
 	return s, nil
 }
 

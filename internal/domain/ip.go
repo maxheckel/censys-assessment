@@ -1,10 +1,7 @@
 package domain
 
-import "gorm.io/gorm"
-
 type IP struct {
-	gorm.Model
-	Network string
+	Network string `gorm:"index"`
 	Geoname_id string
 	Registered_country_geoname_id string
 	Represented_country_geoname_id string

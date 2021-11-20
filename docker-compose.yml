@@ -1,7 +1,5 @@
 version: '3'
 services:
-
-
   db:
     image: postgres:latest
     ports:
@@ -16,7 +14,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: api.Dockerfile
     ports:
       - "8080:8080"
     volumes:
@@ -24,4 +22,15 @@ services:
     depends_on:
       - db
 
+  ui:
+    build:
+      context: .
+      dockerfile: ui.Dockerfile
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./static:/usr/src/app/censys-ui
+    depends_on:
+      - db
+      - api
 
