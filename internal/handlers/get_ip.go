@@ -23,7 +23,7 @@ func (h *Handlers) GetIPDetails(w http.ResponseWriter, r *http.Request) {
 	file, _ := maxminddb.Open(fileName)
 
 	ip := net.ParseIP(params["address"])
-	var record domain.MaxMindRow// Or any appropriate struct
+	var record domain.MaxMindRow // Or any appropriate struct
 	err := file.Lookup(ip, &record)
 	if err != nil {
 		responseError := responses.Error{
@@ -57,4 +57,3 @@ func handleSqlError(w http.ResponseWriter, err error) {
 	w.WriteHeader(errorResponse.Code)
 	json.NewEncoder(w).Encode(errorResponse)
 }
-

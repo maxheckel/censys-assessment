@@ -51,7 +51,7 @@ func main() {
 func bulkInsert(db *gorm.DB) error {
 	log.Println("Beginning import, this could take a while!")
 
-	return db.Exec (fmt.Sprintf(`COPY ips(network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider,postal_code,latitude,longitude,accuracy_radius)
+	return db.Exec(fmt.Sprintf(`COPY ips(network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider,postal_code,latitude,longitude,accuracy_radius)
 	FROM '%s'
 	DELIMITER ','
 	CSV HEADER;`, "/var/lib/postgresql/data/GeoLite2-City-Blocks-IPv4.csv")).Error
@@ -59,7 +59,7 @@ func bulkInsert(db *gorm.DB) error {
 }
 
 // Alternative way to insert the file line by line using the mmdb file type
-func iterativeInsert(db *gorm.DB) error{
+func iterativeInsert(db *gorm.DB) error {
 	fileName, err := filepath.Abs("./cmd/import/data/GeoLite2-City.mmdb")
 	fmt.Println(fileName)
 	file, err := maxminddb.Open(fileName)

@@ -6,8 +6,7 @@ import (
 	"github.com/maxheckel/censys-assessment/internal/handlers"
 )
 
-
-func (s *Server) NewRouter() *mux.Router{
+func (s *Server) NewRouter() *mux.Router {
 	r := mux.NewRouter()
 	//// Setup common middleware
 	cors := ghandlers.CORS(

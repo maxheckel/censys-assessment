@@ -13,7 +13,7 @@ type ipStore struct {
 	db *gorm.DB
 }
 
-func NewIPStore(db *gorm.DB) IPStore{
+func NewIPStore(db *gorm.DB) IPStore {
 	return ipStore{db}
 }
 
