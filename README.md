@@ -21,6 +21,8 @@ Within the `cmd/import/data` folder you must a file downloaded from Max Mind DB.
 
 
 ### Thoughts and Notes
+tldr; I don't know how subnets work
+
 #### A note on the persistence layer:
 The only file that is actually required is the `GeoLite2-City.mmdb` file as the lookups are performed directly against that using the [oschwald/maxminddb-golang](https://github.com/oschwald/maxminddb-golang) package in golang.  For the sake of the assessment I also left in my original attempt at importing the data into a postgres DB.  If you would like to import the data into a postgres database, download it in CSV format and place it in the `dblocal` folder. While it's not required you can import the IP DB into postgres using the following command: ` CENSYS_DB_HOST=localhost CENSYS_DB_PORT=54321 go run cmd/import/main.go`  
 
